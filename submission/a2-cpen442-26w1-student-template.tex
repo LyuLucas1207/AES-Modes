@@ -1,0 +1,107 @@
+% CPEN 442 -- Assignment 2 answer template (optional).
+% Fill in your name(s) and answers below, compile, and submit the PDF as a2.pdf.
+% You do not have to use LaTeX: any readable PDF is fine.
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[dvipsnames,table]{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage[T1]{fontenc}
+
+\definecolor{alicepink}{rgb}{0.98,0.51,1.}
+\definecolor{aliceblue}{rgb}{0.7, 1, 1}
+\definecolor{background}{rgb}{1, 0.98, 0.95}
+
+\lstset{frame=tb, language=Python, showstringspaces=false, columns=flexible,
+  basicstyle={\small\ttfamily}, breaklines=true, backgroundcolor=\color{background}}
+
+\setlength{\parindent}{0in}
+\setlength{\parskip}{\baselineskip}
+
+\newcounter{question}
+\newcommand{\question}[1]{\refstepcounter{question}%
+  \textbf{\colorbox{aliceblue}{[#1 pts]} Question \arabic{question}}}
+
+% Box to write each answer in. It grows with its content.
+\newtcolorbox{answer}{colback=white, colframe=black, boxrule=0.4pt,
+  sharp corners, breakable}
+
+\begin{document}
+
+\begin{center}
+    THE UNIVERSITY OF BRITISH COLUMBIA\\
+    Electrical and Computer Engineering Department\\[\baselineskip]
+    {\bf CPEN 442\hfill Introduction to Cybersecurity\hfill Winter Term 1, 2026}
+    \vspace{1cm}
+
+    {\sc \Large Assignment 2: Symmetric Crypto}
+\end{center}
+
+% One or two students. Delete the second row if you worked alone.
+\begin{tabularx}{\textwidth}{|X|l|}
+    \hline
+    \rowcolor{gray!15} \textbf{Name} & \textbf{Student number} \\
+    \hline
+    First Last & 12345678 \\
+    \hline
+    First Last & 12345678 \\
+    \hline
+\end{tabularx}
+
+Questions 4--7 are answered in \texttt{attacker.py}; this PDF covers Questions 1--3.
+
+\section{Detecting Modes of Operation}
+
+\question{15} Which of \texttt{lyrics-ciphertext1.txt}, \texttt{lyrics-ciphertext2.txt}, and \texttt{lyrics-ciphertext3.txt} is AES-ECB, and how did you tell?
+
+\begin{answer}
+    \textbf{AES-ECB is:} \texttt{lyrics-ciphertext?.txt}
+
+    \textbf{Explanation:}
+    % Write your explanation here.
+\end{answer}
+
+\question{15} Which one is AES-CTR, and how did you tell?
+
+\begin{answer}
+    \textbf{AES-CTR is:} \texttt{lyrics-ciphertext?.txt}
+
+    \textbf{Explanation:}
+    % Write your explanation here.
+\end{answer}
+
+\question{30} Give the mode of operation of each image in \texttt{ciphertext-sprites}, and explain briefly how you found it.
+
+\begin{answer}
+    % You can include code with \begin{lstlisting} ... \end{lstlisting}
+    % or figures with \includegraphics in any of the explanations.
+    \textbf{AES-ECB:} ?, ?, ?, ?
+
+    \textbf{Explanation:}
+    % Write how you identified the AES-ECB images here.
+
+    \bigskip
+    \textbf{AES-CBC:} ?, ?, ?, ?
+
+    \textbf{Explanation:}
+    % Write how you identified the AES-CBC images here.
+
+    \bigskip
+    \textbf{AES-CTR:} ?, ?, ?, ?
+
+    \textbf{Explanation:}
+    % Write how you identified the AES-CTR images here.
+\end{answer}
+
+% Include this section only if you used generative AI.
+% It must be between half a page and one page long, and cannot be written by AI.
+\section*{Generative AI Disclosure}
+
+% Describe how and where you used generative AI.
+
+\end{document}
