@@ -12,7 +12,7 @@ from Crypto.Cipher import AES
 
 HERE = Path(__file__).resolve().parent / "lyrics"
 
-OUTPUT_PATH = HERE / "output"
+OUTPUT_PATH = HERE / "outputs"
 
 FILES = [
     "lyrics-ciphertext1.txt",
@@ -86,6 +86,8 @@ def write_plaintext_blocks(path: Path) -> None:
 
 
 def main() -> None:
+
+    print("============================= Question 2.1, 2.2 =============================")
     block_size = AES.block_size
     print(f"AES.block_size = {block_size} bytes ({block_size * 8} bits)")
     print()
@@ -114,6 +116,8 @@ def main() -> None:
         for count, block_hex in repeated:
             print(f"    x{count}  {block_hex}")
         print()
+
+    print("============================= Question 2.3 =============================")
 
 
 if __name__ == "__main__":

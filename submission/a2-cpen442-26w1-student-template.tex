@@ -47,9 +47,9 @@
     \hline
     \rowcolor{gray!15} \textbf{Name} & \textbf{Student number} \\
     \hline
-    First Last & 12345678 \\
+    Chongkai (Lucas) Lyu & 30349559 \\
     \hline
-    First Last & 12345678 \\
+    Leyang Gao & 58256207 \\
     \hline
 \end{tabularx}
 
@@ -60,30 +60,87 @@ Questions 4--7 are answered in \texttt{attacker.py}; this PDF covers Questions 1
 \question{15} Which of \texttt{lyrics-ciphertext1.txt}, \texttt{lyrics-ciphertext2.txt}, and \texttt{lyrics-ciphertext3.txt} is AES-ECB, and how did you tell?
 
 \begin{answer}
-    \textbf{AES-ECB is:} \texttt{lyrics-ciphertext?.txt}
+    \textbf{AES-ECB is:} \texttt{lyrics-ciphertext3.txt}
 
     \textbf{Explanation:}
-    % Write your explanation here.
+    Each file stores Base64 text, not the raw ciphertext. I decoded it with
+    \lstinline{base64.b64decode(path.read_text().strip())}, then split the
+    resulting bytes into 16-byte AES blocks.
+
+    \texttt{lyrics-ciphertext1.txt} has 181 blocks, all distinct.
+    \texttt{lyrics-ciphertext2.txt} has 182 blocks, all distinct.
+    \texttt{lyrics-ciphertext3.txt} has 182 blocks but only 171 distinct ones.
+    Six block values repeat, including
+    \lstinline{95135c6db929844c03dec22524eddc6c} four times and
+    \lstinline{6b8273a4705485a6f43133c9061c643e} four times.
+
+    In ECB each block is encrypted on its own, so \(M_i = M_j\) implies
+    \(C_i = C_j\). The lyrics repeat 16-byte phrases, and those repeats show
+    up as identical ciphertext blocks only in \texttt{lyrics-ciphertext3.txt}.
+    CBC and CTR do not preserve \(M_i = M_j \Rightarrow C_i = C_j\), so that
+    file is AES-ECB.
 \end{answer}
 
 \question{15} Which one is AES-CTR, and how did you tell?
 
 \begin{answer}
-    \textbf{AES-CTR is:} \texttt{lyrics-ciphertext?.txt}
+    \textbf{AES-CTR is:} \texttt{lyrics-ciphertext1.txt}
 
     \textbf{Explanation:}
-    % Write your explanation here.
+    The plaintext, \texttt{lyrics-plaintext.txt}, is 2896 bytes. That length
+    is already a multiple of 16, but ECB and CBC still apply PKCS\#7 padding:
+    an aligned plaintext gets one extra block of sixteen \lstinline{0x10}
+    bytes before encryption. CTR does not pad, so its ciphertext stays the
+    same length as the plaintext.
+
+    After the same Base64 decode, the lengths are:
+
+    \begin{center}
+    \begin{tabular}{lr}
+        \texttt{lyrics-ciphertext1.txt} & 2896 bytes \\
+        \texttt{lyrics-ciphertext2.txt} & 2912 bytes \\
+        \texttt{lyrics-ciphertext3.txt} & 2912 bytes \\
+    \end{tabular}
+    \end{center}
+
+    Ciphertexts 2 and 3 are one block longer than the plaintext.
+    Ciphertext 3 is the ECB file from Question 1, so the other long file is
+    CBC. The short file matches the plaintext length and has no extra padding
+    block, so \texttt{lyrics-ciphertext1.txt} is AES-CTR.
 \end{answer}
 
 \question{30} Give the mode of operation of each image in \texttt{ciphertext-sprites}, and explain briefly how you found it.
 
 \begin{answer}
-    % You can include code with \begin{lstlisting} ... \end{lstlisting}
-    % or figures with \includegraphics in any of the explanations.
-    \textbf{AES-ECB:} ?, ?, ?, ?
+    \begin{center}
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{cccc}
+        \includegraphics[width=0.22\textwidth]{../ciphertext-sprites/0.png} &
+        \includegraphics[width=0.22\textwidth]{../ciphertext-sprites/1.png} &
+        \includegraphics[width=0.22\textwidth]{../ciphertext-sprites/2.png} &
+        \includegraphics[width=0.22\textwidth]{../ciphertext-sprites/3.png} \\
+        0 & 1 & 2 & 3 \\[1em]
+        \includegraphics[width=0.22\textwidth]{../ciphertext-sprites/4.png} &
+        \includegraphics[width=0.22\textwidth]{../ciphertext-sprites/5.png} &
+        \includegraphics[width=0.22\textwidth]{../ciphertext-sprites/6.png} &
+        \includegraphics[width=0.22\textwidth]{../ciphertext-sprites/7.png} \\
+        4 & 5 & 6 & 7 \\[1em]
+        \includegraphics[width=0.22\textwidth]{../ciphertext-sprites/8.png} &
+        \includegraphics[width=0.22\textwidth]{../ciphertext-sprites/9.png} &
+        \includegraphics[width=0.22\textwidth]{../ciphertext-sprites/10.png} &
+        \includegraphics[width=0.22\textwidth]{../ciphertext-sprites/11.png} \\
+        8 & 9 & 10 & 11 \\
+    \end{tabular}
+    \end{center}
+
+    \textbf{AES-ECB:} 0, 4, 6, 9
 
     \textbf{Explanation:}
-    % Write how you identified the AES-ECB images here.
+    Images 0, 4, 6, and 9 still show repeated blocks of pixels. ECB encrypts
+    each 16-byte block on its own, so \(M_i = M_j\) implies \(C_i = C_j\).
+    A flat or repeated region of the original sprite stays visible after
+    encryption. The other eight images look like noise and do not keep those
+    repeated patches.
 
     \bigskip
     \textbf{AES-CBC:} ?, ?, ?, ?
