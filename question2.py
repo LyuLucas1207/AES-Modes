@@ -6,13 +6,21 @@ produce identical ciphertext blocks. CBC and CTR do not.
 
 import base64
 from collections import Counter
+from itertools import combinations
 from pathlib import Path
 
 from Crypto.Cipher import AES
+from PIL import Image, ImageDraw, ImageFont
 
-HERE = Path(__file__).resolve().parent / "lyrics"
+from utils import load_image, save_img
 
+ROOT = Path(__file__).resolve().parent
+HERE = ROOT / "lyrics"
 OUTPUT_PATH = HERE / "outputs"
+
+SPRITE_DIR = ROOT / "ciphertext-sprites"
+SPRITE_OUTPUT = SPRITE_DIR / "outputs"
+ECB_SPRITES = {0, 4, 6, 9}
 
 FILES = [
     "lyrics-ciphertext1.txt",
@@ -85,6 +93,77 @@ def write_plaintext_blocks(path: Path) -> None:
     (OUTPUT_PATH / path.name).write_text("\n".join(lines) + "\n")
 
 
+# 两张同样大小的灰度图逐字节异或。
+# XOR two grayscale images of the same size, one byte at a time.
+#
+# 输入 example / input example:
+#   left = b"\x01\x02\xff"
+#   right = b"\x10\x02\x0f"
+# 输出 example / output example:
+#   b"\x11\x00\xf0"
+def xor_bytes(left: bytes, right: bytes) -> bytes:
+    return bytes(x ^ y for x, y in zip(left, right, strict=True))
+
+
+# 去掉 ECB 的四张图，剩下的图两两异或。
+# 每对存成 48x48，再拼成一张总图，每张下面写 “a xor b”。
+# Drop the four ECB sprites and XOR every remaining pair.
+# Each pair is saved at 48x48, then all pairs are placed on one sheet
+# with “a xor b” under each image.
+#
+# 输入 example / input example:
+#   sprites 1.png and 2.png, after removing 0, 4, 6, 9
+# 输出 example / output example:
+#   ciphertext-sprites/outputs/1-xor-2.png
+#   ciphertext-sprites/outputs/all-pairs.png
+#   总图格子下的字 / caption under that cell: 1 xor 2
+def write_sprite_xors() -> None:
+    sprites = [
+        index
+        for index in range(12)
+        if index not in ECB_SPRITES and (SPRITE_DIR / f"{index}.png").is_file()
+    ]
+    images = {index: load_image(str(SPRITE_DIR / f"{index}.png")) for index in sprites}
+    pairs = list(combinations(sprites, 2))
+    SPRITE_OUTPUT.mkdir(parents=True, exist_ok=True)
+
+    xor_images = []
+    for left, right in pairs:
+        mixed = xor_bytes(images[left], images[right])
+        save_img(str(SPRITE_OUTPUT / f"{left}-xor-{right}.png"), mixed)
+        xor_images.append((left, right, mixed))
+
+    scale = 4
+    thumb = 48 * scale
+    caption_h = 28
+    columns = 7
+    rows = (len(xor_images) + columns - 1) // columns
+    sheet = Image.new("L", (columns * thumb, rows * (thumb + caption_h)), 255)
+    draw = ImageDraw.Draw(sheet)
+    try:
+        font = ImageFont.truetype(
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 16
+        )
+    except OSError:
+        font = ImageFont.load_default()
+
+    for n, (left, right, mixed) in enumerate(xor_images):
+        tile = Image.frombytes("L", (48, 48), mixed).resize(
+            (thumb, thumb), Image.Resampling.NEAREST
+        )
+        column = n % columns
+        row = n // columns
+        x = column * thumb
+        y = row * (thumb + caption_h)
+        sheet.paste(tile, (x, y))
+        label = f"{left} xor {right}"
+        draw.text((x + 4, y + thumb + 4), label, fill=0, font=font)
+
+    sheet.save(SPRITE_OUTPUT / "all-pairs.png")
+    print(f"sprite xor pairs: {len(pairs)}")
+    print(f"sprite xor files: {SPRITE_OUTPUT}")
+
+
 def main() -> None:
 
     print("============================= Question 2.1, 2.2 =============================")
@@ -118,6 +197,7 @@ def main() -> None:
         print()
 
     print("============================= Question 2.3 =============================")
+    write_sprite_xors()
 
 
 if __name__ == "__main__":

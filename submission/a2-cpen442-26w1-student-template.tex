@@ -143,16 +143,26 @@ Questions 4--7 are answered in \texttt{attacker.py}; this PDF covers Questions 1
     repeated patches.
 
     \bigskip
-    \textbf{AES-CBC:} ?, ?, ?, ?
+    \textbf{AES-CTR:} 2, 3, 5, 10
 
     \textbf{Explanation:}
-    % Write how you identified the AES-CBC images here.
+    The other eight images were XORed in every pair. As shown below, CTR uses
+    one shared key and an all-zero nonce, so those ciphertexts share a
+    keystream. XORing two of them cancels that keystream and leaves the XOR
+    of the two plaintexts, which still looks like a sprite. Every pair among
+    2, 3, 5, and 10 shows that shape, so those four are AES-CTR.
+
+    \begin{center}
+        \includegraphics[width=\textwidth]{../ciphertext-sprites/outputs/all-pairs.png}
+    \end{center}
 
     \bigskip
-    \textbf{AES-CTR:} ?, ?, ?, ?
+    \textbf{AES-CBC:} 1, 7, 8, 11
 
     \textbf{Explanation:}
-    % Write how you identified the AES-CTR images here.
+    After removing the four ECB images and the four CTR images, 1, 7, 8, and
+    11 remain. Pairs that include one of these do not reveal a sprite, so
+    they are AES-CBC.
 \end{answer}
 
 % Include this section only if you used generative AI.
