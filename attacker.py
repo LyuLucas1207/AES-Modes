@@ -126,4 +126,75 @@ def guess_code_ecb(generate_guest_token: Callable[[str, str], tuple[bytes, bytes
 
 def guess_code_cbc(generate_guest_token: Callable[[str, str], tuple[bytes, bytes]], 
                    read_token: Callable[[bytes, bytes, str, str], str]) -> str:
-    return ''
+    """
+    block size: 16
+    name=L, pwd=0000. The prefix is two blocks, the code is the next two.
+    64 is a multiple of 16, so PKCS#7 adds one more block of 0x10.
+    block1: name=L&pwd=0000&
+    block2: role=guest&code=
+    block3: xxxxxxxxxxxxxxxx   <= code, first 16
+    block4: xxxxxxxxxxxxxxxx   <= code, last 16. last byte is the last code char
+    block5: 0x10 * 16           <= padding
+
+              block4[15] = E(Plaintext_block4[15] xor block3[15])
+           D(block4[15]) = Plaintext_block4[15] xor block3[15]
+    Plaintext_block4[15] = D(block4[15]) xor block3[15]
+
+    only send block3[0:14] block3[15] | block4
+    padding need to be 0x10, so we need to guess the last byte of block3[15]
+    => D(block4[15]) xor guess_block3[15] = 0x10
+                            D(block4[15]) = 0x10 xor guess_block3[15]
+                     Plaintext_block4[15] = 0x10 xor guess_block3[15] xor block3[15]
+
+    block size: 16
+    name=L, pwd=00000 +1 zero
+    64 is a multiple of 16, so PKCS#7 adds one more block of 0x10.
+    block1: name=L&pwd=00000
+    block2: &role=guest&code
+    block3: =xxxxxxxxxxxxxxx   
+    block4: xxxxxxxxxxxxxxxx
+    block5: x....
+
+              block4[15] = E(Plaintext_block4[15] xor block3[15])
+           D(block4[15]) = Plaintext_block4[15] xor block3[15]
+    Plaintext_block4[15] = D(block4[15]) xor block3[15]
+
+    only send block3[0:14] block3[15] | block4
+    padding need to be 0x10, so we need to guess the last byte of block3[15]
+    => D(block4[15]) xor guess_block3[15] = 0x10
+                            D(block4[15]) = 0x10 xor guess_block3[15]
+                     Plaintext_block4[15] = 0x10 xor guess_block3[15] xor block3[15]
+    """
+    block_size = AES.block_size
+    name = 'L'
+    code_len = 32
+    real_code = ''
+    wanted = 0x01
+
+    def padding_ok(token: bytes, iv: bytes, pwd: str) -> bool:
+        result = read_token(token, iv, name, pwd)
+        return 'padding is incorrect' not in result.lower()
+
+    for zeros in range(4, 4 + code_len):
+        pwd = '0' * zeros
+        ciphertext, iv = generate_guest_token(name, pwd)
+        block3 = bytearray(ciphertext[2 * block_size:3 * block_size])
+        block4 = ciphertext[3 * block_size:4 * block_size]
+        original_last = block3[-1]
+
+        for guess in range(256):
+            block3[-1] = guess
+            if not padding_ok(bytes(block3) + block4, iv, pwd):
+                continue
+            # A longer accidental pad also passes. Flip the byte before it.
+            check = bytearray(block3)
+            check[-2] ^= 0xff
+            if not padding_ok(bytes(check) + block4, iv, pwd):
+                continue
+            plain = (wanted ^ guess) ^ original_last
+
+            # put the plaintext char in front, because we are going backward
+            real_code = chr(plain) + real_code
+            break
+
+    return real_code
