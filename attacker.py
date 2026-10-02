@@ -166,6 +166,7 @@ def guess_code_cbc(generate_guest_token: Callable[[str, str], tuple[bytes, bytes
                      Plaintext_block4[15] = 0x10 xor guess_block3[15] xor block3[15]
     """
     block_size = AES.block_size
+    pwd = '0000'
     name = 'L'
     code_len = 32
     real_code = ''
@@ -175,8 +176,7 @@ def guess_code_cbc(generate_guest_token: Callable[[str, str], tuple[bytes, bytes
         result = read_token(token, iv, name, pwd)
         return 'padding is incorrect' not in result.lower()
 
-    for zeros in range(4, 4 + code_len):
-        pwd = '0' * zeros
+    for _ in range(code_len):
         ciphertext, iv = generate_guest_token(name, pwd)
         block3 = bytearray(ciphertext[2 * block_size:3 * block_size])
         block4 = ciphertext[3 * block_size:4 * block_size]
@@ -191,10 +191,13 @@ def guess_code_cbc(generate_guest_token: Callable[[str, str], tuple[bytes, bytes
             check[-2] ^= 0xff
             if not padding_ok(bytes(check) + block4, iv, pwd):
                 continue
+
+            # get the plaintext char
             plain = (wanted ^ guess) ^ original_last
 
             # put the plaintext char in front, because we are going backward
             real_code = chr(plain) + real_code
             break
+        pwd += '0'
 
     return real_code
