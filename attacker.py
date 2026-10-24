@@ -37,14 +37,14 @@ def forge_admin_token_ecb(generate_guest_token: Callable[[str, str], tuple[bytes
     block1: name=Lucas&pwd=1
     block2: 234567890abcdef&
     """
-    useful_block = prefix_ct[:2 * block_size]
+    useful_block = prefix_ct[:2 * block_size] # name=Lucas&pwd=1 + 234567890abcdef&
     role_ct, _ = generate_guest_token(name, "Xrole=super_admin")
     """
     block size: 16
     block1: name=Lucas&pwd=X
     block2: role=super_admin
     """
-    useful_block = useful_block + role_ct[block_size:2 * block_size]
+    useful_block = useful_block + role_ct[block_size:2 * block_size] # role=super_admin
     code_ct, _ = generate_guest_token(name, "123456")
     """
     block size: 16
